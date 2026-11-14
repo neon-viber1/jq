@@ -45,8 +45,9 @@ manpage_intro: |
   `jq` can accept text input as well, but by default, `jq` reads a
   stream of JSON entities (including numbers and other literals) from
   `stdin`. Whitespace is only needed to separate entities such as 1
-  and 2, and true and false.  One or more <files> may be specified, in
-  which case `jq` will read input from those instead.
+  and 2, and true and false.  Numbers with leading zeros, such as 01,
+  are not valid JSON and are rejected as input.  One or more <files>
+  may be specified, in which case `jq` will read input from those instead.
 
   The <options> are described in the [INVOKING JQ] section; they
   mostly concern input and output formatting. The <filter> is written

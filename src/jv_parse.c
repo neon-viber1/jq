@@ -532,6 +532,13 @@ static pfunc check_literal(struct jv_parser* p) {
   } else {
     // FIXME: better parser
     p->tokenbuf[p->tokenpos] = 0;
+    {
+      // RFC 8259 forbids leading zeros in numbers
+      const char* t = p->tokenbuf;
+      if (*t == '-') t++;
+      if (!(p->flags & JV_PARSE_ALLOW_LEADING_ZEROS) && t[0] == '0' && t[1] >= '0' && t[1] <= '9')
+        return "Invalid numeric literal";
+    }
 #ifdef USE_DECNUM
     jv number = jv_number_with_literal(p->tokenbuf);
     if (jv_get_kind(number) == JV_KIND_INVALID) {

@@ -1,6 +1,6 @@
-#line 1 "src/lexer.c"
+#line 2 "src/lexer.c"
 
-#line 3 "src/lexer.c"
+#line 4 "src/lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -814,14 +814,14 @@ struct lexer_param;
     yyset_extra(yylloc->end, yyscanner);         \
   } while (0);
 
-#line 817 "src/lexer.c"
+#line 818 "src/lexer.c"
 
 #line 26 "src/lexer.l"
   static int enter(int opening, int state, yyscan_t yyscanner);
   static int try_exit(int closing, int state, yyscan_t yyscanner);
-#line 822 "src/lexer.c"
+#line 823 "src/lexer.c"
 #define YY_NO_INPUT 1
-#line 824 "src/lexer.c"
+#line 825 "src/lexer.c"
 
 #define INITIAL 0
 #define IN_PAREN 1
@@ -1116,7 +1116,7 @@ YY_DECL
 #line 39 "src/lexer.l"
 
 
-#line 1119 "src/lexer.c"
+#line 1120 "src/lexer.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1386,7 +1386,7 @@ case 40:
 YY_RULE_SETUP
 #line 94 "src/lexer.l"
 {
-   yylval->literal = jv_parse_sized(yytext, yyleng); return LITERAL;
+   yylval->literal = jv_parse_sized_custom_flags(yytext, yyleng, JV_PARSE_ALLOW_LEADING_ZEROS); return LITERAL;
 }
 	YY_BREAK
 case 41:
@@ -1473,7 +1473,7 @@ YY_RULE_SETUP
 #line 136 "src/lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1476 "src/lexer.c"
+#line 1477 "src/lexer.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(IN_PAREN):
 case YY_STATE_EOF(IN_BRACKET):

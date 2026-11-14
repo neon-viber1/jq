@@ -1,3 +1,10 @@
+# Unreleased
+
+## Language changes
+
+- The JSON parser now rejects numbers with leading zeros such as `00`, `01` and `-01` with `Invalid numeric literal`, as required by RFC 8259. Previously they were silently read as `0` or `1`. jq program literals and `tonumber` are unchanged.
+  @user jqlang/jq#NNNN
+
 # 1.8.2
 
 This is a patch release with security fixes and bug fixes since 1.8.1, along with new builds for Windows arm64 and Docker arm/v7.

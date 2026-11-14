@@ -253,10 +253,12 @@ enum {
   JV_PARSE_SEQ              = 1,
   JV_PARSE_STREAMING        = 2,
   JV_PARSE_STREAM_ERRORS    = 4,
+  JV_PARSE_ALLOW_LEADING_ZEROS = 8, // internal: used for jq program literals
 };
 
 jv jv_parse(const char* string);
 jv jv_parse_sized(const char* string, int length);
+jv jv_parse_sized_custom_flags(const char* string, int length, int flags);
 jv jv_parse_custom_flags(const char* string, int flags);
 
 typedef void (*jv_nomem_handler_f)(void *);

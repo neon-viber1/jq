@@ -1105,4 +1105,18 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+# Numbers with leading zeros are invalid JSON
+for args in "." "--stream ." "-c ."; do
+  if echo '{"abc": 000}' | $JQ $args >/dev/null 2>"$d/lz_err"; then
+    printf 'Error expected for leading zeros (%s)\n' "$args" 1>&2
+    exit 1
+  fi
+done
+echo '{"abc": 000}' | $JQ . >/dev/null 2>"$d/lz_err" && exit 1
+grep -q 'Invalid numeric literal' "$d/lz_err"
+if $JQ -n --argjson x 01 . >/dev/null 2>&1; then
+  printf 'Error expected for --argjson with leading zeros\n' 1>&2
+  exit 1
+fi
+
 exit 0

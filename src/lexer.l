@@ -92,7 +92,7 @@ struct lexer_param;
 }
 
 ([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)? {
-   yylval->literal = jv_parse_sized(yytext, yyleng); return LITERAL;
+   yylval->literal = jv_parse_sized_custom_flags(yytext, yyleng, JV_PARSE_ALLOW_LEADING_ZEROS); return LITERAL;
 }
 
 "\"" {
