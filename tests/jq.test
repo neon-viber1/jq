@@ -1336,8 +1336,8 @@ try (def x: reverse; x=10) catch .
 "Invalid path expression with result [2,1,0]"
 
 .[] = 1
-[1,null,Infinity,-Infinity,NaN,-NaN]
-[1,1,1,1,1,1]
+[1,null,nan,-nan]
+[1,1,1,1]
 
 #
 # Conditionals
@@ -2575,11 +2575,23 @@ tojson | fromjson
 {"a":nan}
 {"a":null}
 
-# NaN with payload is not parsed
+# tonumber still accepts NaN and Infinity
+.[] | tonumber | isnan
+["nan","NaN"]
+true
+true
+
+# NaN, Infinity and NaN with payload are not parsed
 .[] | try (fromjson | isnan) catch .
-["NaN","-NaN","NaN1","NaN10","NaN100","NaN1000","NaN10000","NaN100000"]
+["nan","-nan","NaN","-NaN","Infinity","-Infinity","inf","-inf","NaN1","NaN10","NaN100","NaN1000","NaN10000","NaN100000"]
 true
 true
+"Invalid numeric literal at EOF at line 1, column 3 (while parsing 'NaN')"
+"Invalid numeric literal at EOF at line 1, column 4 (while parsing '-NaN')"
+"Invalid numeric literal at EOF at line 1, column 8 (while parsing 'Infinity')"
+"Invalid numeric literal at EOF at line 1, column 9 (while parsing '-Infinity')"
+"Invalid numeric literal at EOF at line 1, column 3 (while parsing 'inf')"
+"Invalid numeric literal at EOF at line 1, column 4 (while parsing '-inf')"
 "Invalid numeric literal at EOF at line 1, column 4 (while parsing 'NaN1')"
 "Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')"
 "Invalid numeric literal at EOF at line 1, column 6 (while parsing 'NaN100')"

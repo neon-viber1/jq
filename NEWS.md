@@ -1,3 +1,9 @@
+# Unreleased
+
+## Language changes
+
+- The JSON parser now rejects `NaN`, `-NaN`, `Infinity`, `-Infinity`, `inf` and `-inf` as invalid numeric literals, as other JSON parsers do. The lowercase `nan` literal is still accepted as a jq extension, and `tonumber` still accepts these forms.
+
 # 1.8.2
 
 This is a patch release with security fixes and bug fixes since 1.8.1, along with new builds for Windows arm64 and Docker arm/v7.
