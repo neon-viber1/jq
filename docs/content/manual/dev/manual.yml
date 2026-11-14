@@ -3349,6 +3349,11 @@ sections:
       arguments are available as three-argument jq functions that ignore
       `.`.
 
+      If a math function raises an invalid floating point exception (for
+      example `-1 | sqrt`), it produces an error instead of `nan`.
+      Other exceptions, such as overflow or division by zero (`0 | log`),
+      still produce infinity.
+
       Availability of standard math functions depends on the
       availability of the corresponding math functions in your operating
       system and C math library.  Unavailable math functions will be

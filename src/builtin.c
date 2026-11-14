@@ -23,6 +23,9 @@
 #endif
 #include <string.h>
 #include <time.h>
+#ifdef HAVE_FENV_H
+#include <fenv.h>
+#endif
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -142,12 +145,29 @@ static double __jq_significand(double x) {
 
 #endif // ifdef __APPLE__
 
+#ifdef HAVE_FENV_H
+#define FP_CLEAR() feclearexcept(FE_ALL_EXCEPT)
+// Invalid operations (e.g. sqrt(-1)) are errors; overflow, underflow,
+// inexact and divide-by-zero (e.g. log(0) == -infinite) keep their results.
+static jv fp_check(const char *name, jv ret) {
+  if (fetestexcept(FE_INVALID)) {
+    jv_free(ret);
+    return jv_invalid_with_msg(jv_string_fmt("%s: invalid floating point operation", name));
+  }
+  return ret;
+}
+#else
+#define FP_CLEAR() ((void)0)
+static jv fp_check(const char *name, jv ret) { return ret; }
+#endif
+
 #define LIBM_DD(name) \
 static jv f_ ## name(jq_state *jq, jv input) { \
   if (jv_get_kind(input) != JV_KIND_NUMBER) { \
     return type_error(input, "number required"); \
   } \
-  jv ret = jv_number(name(jv_number_value(input))); \
+  FP_CLEAR(); \
+  jv ret = fp_check(#name, jv_number(name(jv_number_value(input)))); \
   jv_free(input); \
   return ret; \
 }
@@ -168,7 +188,8 @@ static jv f_ ## name(jq_state *jq, jv input, jv a, jv b) { \
     jv_free(a); \
     return type_error(b, "number required"); \
   } \
-  jv ret = jv_number(name(jv_number_value(a), jv_number_value(b))); \
+  FP_CLEAR(); \
+  jv ret = fp_check(#name, jv_number(name(jv_number_value(a), jv_number_value(b)))); \
   jv_free(a); \
   jv_free(b); \
   return ret; \
@@ -198,7 +219,8 @@ static jv f_ ## name(jq_state *jq, jv input, jv a, jv b, jv c) { \
     jv_free(b); \
     return type_error(c, "number required"); \
   } \
-  jv ret = jv_number(name(jv_number_value(a), jv_number_value(b), jv_number_value(c))); \
+  FP_CLEAR(); \
+  jv ret = fp_check(#name, jv_number(name(jv_number_value(a), jv_number_value(b), jv_number_value(c)))); \
   jv_free(a); \
   jv_free(b); \
   jv_free(c); \

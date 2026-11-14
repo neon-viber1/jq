@@ -1,3 +1,7 @@
+# Unreleased
+
+- Math functions now raise an error when the underlying C function signals an invalid floating point exception (using `<fenv.h>`), instead of silently returning `nan`. #NNNN
+
 # 1.8.2
 
 This is a patch release with security fixes and bug fixes since 1.8.1, along with new builds for Windows arm64 and Docker arm/v7.

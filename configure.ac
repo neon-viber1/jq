@@ -45,6 +45,7 @@ if test "$USE_MAINTAINER_MODE" = yes; then
   AC_CHECK_PROGS(LEX, flex lex)
 fi
 
+AC_CHECK_HEADERS([fenv.h])
 AC_CHECK_FUNCS(memmem)
 
 AC_CHECK_HEADER("sys/cygwin.h", [have_cygwin=1;])
