@@ -11,27 +11,6 @@ def add(f): reduce f as $x (null; . + $x);
 def add: add(.[]);
 def del(f): delpaths([path(f)]);
 def abs: if . < 0 then - . else . end;
-def _assign(paths; $value): reduce path(paths) as $p (.; setpath($p; $value));
-def _modify(paths; update):
-    reduce path(paths) as $p ([., []];
-        . as $dot
-      | null
-      | label $out
-      | ($dot[0] | getpath($p)) as $v
-      | (
-          (   $$$$v
-            | update
-            | (., break $out) as $v
-            | $$$$dot
-            | setpath([0] + $p; $v)
-          ),
-          (
-              $$$$dot
-            | setpath([1, (.[1] | length)]; $p)
-          )
-        )
-    ) | . as $dot | $dot[0] | delpaths($dot[1]);
-def map_values(f): .[] |= f;
 
 # recurse
 def recurse(f): def r: ., (f | r); r;
@@ -74,6 +53,59 @@ def flatten($x): if $x < 0 then error("flatten depth must not be negative") else
 def flatten: _flatten(-1);
 def range($x;$y): range($x;$y;1);
 def range($x): range(0;$x);
+
+def _slice_index($i; $len; $default; round):
+  if $i == null then $default
+  else (if $i < 0 then $i + $len else $i end) | if . < 0 then 0 elif . > $len then $len else . end | round end;
+# Resolve slice bounds against the input and order the paths so that those
+# at greater positions come first; applying them in that order keeps the
+# indices of the remaining paths valid.
+def _slice_paths($in):
+  map(. as $p
+      | reduce range(0; $p|length) as $i ([];
+          . as $pre | $p[$i] as $c
+          | if ($c|type) == "object" and ($c|has("start")) and ($c|has("end")) then
+              ($in | getpath($pre) | length) as $l
+              | ($in | getpath($pre) | type) as $t
+              | if $t == "array" then
+                  _slice_index($c.start; $l; 0; floor) as $s
+                  | [_slice_index($c.end; $l; $l; ceil), $s] as [$e, $s]
+                  | $pre + [{start: $s, end: (if $e < $s then $s else $e end)}]
+                else $pre + [$c] end
+            else $pre + [$c] end))
+  | . as $c
+  | [range(0; length) as $i | {k: ($c[$i] | map(if type == "object" then .start else . end)), v: $c[$i]}]
+  | sort_by(.k)
+  | [.[range(length-1; -1; -1)].v];
+def _has_slice: reduce .[][] as $c (false; . or ($c|type) == "object");
+def _assign(paths; $value):
+  . as $in | [path(paths)] as $ps
+  | if ($ps | _has_slice) then
+      reduce ($ps | _slice_paths($in))[] as $p ($in; setpath($p; $value))
+    else reduce $ps[] as $p (.; setpath($p; $value)) end;
+def _modify(paths; update):
+    . as $in | [path(paths)] as $ps
+    | ($ps | _has_slice) as $sl
+    | reduce (if $sl then ($ps | _slice_paths($in))[] else $ps[] end) as $p ([., []];
+        . as $dot
+      | null
+      | label $out
+      | ($dot[0] | getpath($p)) as $v
+      | (
+          (   $$$$v
+            | update
+            | (., break $out) as $v
+            | $$$$dot
+            | setpath([0] + $p; $v)
+          ),
+          (
+              $$$$dot
+            | if $sl then setpath([0]; .[0] | delpaths([$p]))
+              else setpath([1, (.[1] | length)]; $p) end
+          )
+        )
+    ) | . as $dot | $dot[0] | delpaths($dot[1]);
+def map_values(f): .[] |= f;
 def todateiso8601: strftime("%Y-%m-%dT%H:%M:%SZ");
 def fromdate: fromdateiso8601;
 def todate: todateiso8601;
