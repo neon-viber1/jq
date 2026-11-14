@@ -147,9 +147,10 @@ TESTS += tests/optionaltest
 endif
 
 check_PROGRAMS = tests/libjq_attrs_test
+COMPILED_TESTS = tests/libjq_attrs_test
+TESTS += $(COMPILED_TESTS)
 tests_libjq_attrs_test_SOURCES = tests/libjq_attrs_test.c
 tests_libjq_attrs_test_LDADD = libjq.la
-TESTS += tests/libjq_attrs_test
 
 AM_TESTS_ENVIRONMENT = JQ=$(abs_builddir)/jq
 if ENABLE_VALGRIND
@@ -234,7 +235,7 @@ DOC_FILES = docs/content docs/public docs/templates                     \
         docs/build_mantests.py docs/build_website.py docs/README.md     \
         docs/validate_manual_schema.py docs/manual_schema.yml
 
-EXTRA_DIST = tests/libjq_attrs_test.c $(DOC_FILES) $(man_MANS) $(TESTS) $(TEST_LOG_COMPILER)     \
+EXTRA_DIST = tests/libjq_attrs_test.c $(DOC_FILES) $(man_MANS) $(filter-out $(COMPILED_TESTS),$(TESTS)) $(TEST_LOG_COMPILER)     \
         jq.1.prebuilt jq.spec src/lexer.c src/lexer.h src/parser.c      \
         src/parser.h src/version.h src/builtin.jq scripts/version       \
         libjq.pc                                                        \
