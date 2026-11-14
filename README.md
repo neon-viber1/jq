@@ -62,6 +62,14 @@ make clean
 make LDFLAGS=-all-static
 ```
 
+Build a position-independent executable (PIE):
+
+```console
+./configure --with-oniguruma=builtin CFLAGS='-fPIE -O2' LDFLAGS='-pie'
+make clean
+make -j8
+```
+
 If you're not using the latest git version but instead building a released tarball (available on the release page), skip the `autoreconf` step, and flex or bison won't be needed.
 
 ##### Cross-Compilation
