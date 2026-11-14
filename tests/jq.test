@@ -2894,3 +2894,31 @@ null
 try ((reduce range(10001) as $_ ({}; {a: .})) as $x | [$x, $x] | unique) catch .
 null
 "Comparison too deep"
+
+# Assignment to a path starting from a variable is a compile error
+%%FAIL IGNORE MSG
+{} as $x | $x.a = 0
+
+%%FAIL IGNORE MSG
+{} as $x | $x.a |= 1
+
+%%FAIL IGNORE MSG
+{} as $x | $x[0] += 1
+
+%%FAIL IGNORE MSG
+{} as $x | $x[] //= 1
+
+%%FAIL IGNORE MSG
+{} as $x | $x.a.b[1:2] *= 1
+
+{} as $x | ($x | .a = 0)
+null
+{"a":0}
+
+{"k":"a"} as $x | .[$x.k] = 1
+null
+{"a":1}
+
+1 as $v | .a = $v
+null
+{"a":1}

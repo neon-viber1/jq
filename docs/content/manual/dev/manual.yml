@@ -3558,9 +3558,9 @@ sections:
       such as `|=` or `+=`, rather than `=`.
 
       Note that the LHS of assignment operators refers to a value in
-      `.`.  Thus `$var.foo = 1` won't work as expected (`$var.foo` is
-      not a valid or useful path expression in `.`); use `$var | .foo =
-      1` instead.
+      `.`.  Thus `$var.foo = 1` is not allowed (`$var.foo` is not a
+      valid or useful path expression in `.`) and is rejected with a
+      compile error; use `$var | .foo = 1` instead.
 
       Note too that `.a,.b=0` does not set `.a` and `.b`, but
       `(.a,.b)=0` sets both.
