@@ -1105,4 +1105,35 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+## Test that terminal colors are reset when interrupted by a signal
+if [ "$(uname)" != "Windows_NT" ] && command -v kill >/dev/null; then
+  for sig in INT TERM; do
+    for opt in -C -M; do
+      out=$d/sig_out
+      : > "$out"
+      (while :; do echo '{"a":[1,2,3]}'; sleep 0.05; done) | $JQ $opt . > "$out" 2>/dev/null &
+      bgpid=$!
+      sleep 1
+      pid=$(pgrep -P $$ -x "$(basename "$JQ")" 2>/dev/null | head -n1)
+      if [ -n "$pid" ]; then
+        kill -$sig "$pid"
+        sleep 0.5
+        if [ "$opt" = -C ]; then
+          if [ "$(tail -c 4 "$out" | od -An -c | tr -d ' ')" != '033[0m' ]; then
+            echo "Expected color reset after SIG$sig with $opt" 1>&2
+            kill -KILL "$bgpid" 2>/dev/null
+            exit 1
+          fi
+        elif grep -q "$(printf '\033')" "$out"; then
+          echo "Unexpected escape bytes with $opt" 1>&2
+          kill -KILL "$bgpid" 2>/dev/null
+          exit 1
+        fi
+      fi
+      kill -KILL "$bgpid" 2>/dev/null
+      wait "$bgpid" 2>/dev/null || true
+    done
+  done
+fi
+
 exit 0
