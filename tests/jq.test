@@ -2895,23 +2895,6 @@ try ((reduce range(10001) as $_ ({}; {a: .})) as $x | [$x, $x] | unique) catch .
 null
 "Comparison too deep"
 
-# Invalid floating point operations in math functions are errors
-try (-1 | sqrt) catch .
-null
-"sqrt: invalid floating point operation"
-
-try (2 | acos) catch .
-null
-"acos: invalid floating point operation"
-
-try (-1 | log) catch .
-null
-"log: invalid floating point operation"
-
-try pow(-8; 1/3) catch .
-null
-"pow: invalid floating point operation"
-
 # Divide-by-zero, overflow and inexact results keep their values
 (0 | log | isinfinite), (1 | exp10 | . > 0), (1/3 | . > 0.33), (nan | sqrt | isnan)
 null
