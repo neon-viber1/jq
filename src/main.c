@@ -274,24 +274,6 @@ static void stderr_cb(void *data, jv input) {
   jv_free(input);
 }
 
-#ifdef WIN32
-int umain(int argc, char* argv[]);
-
-int wmain(int argc, wchar_t* wargv[]) {
-  size_t arg_sz;
-  char **argv = alloca(argc * sizeof(wchar_t*));
-  for (int i = 0; i < argc; i++) {
-    argv[i] = alloca((arg_sz = WideCharToMultiByte(CP_UTF8,
-                                                   0,
-                                                   wargv[i],
-                                                   -1, 0, 0, 0, 0)));
-    WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], arg_sz, 0, 0);
-  }
-  return umain(argc, argv);
-}
-
-int umain(int argc, char* argv[]) {
-#else /*}*/
 // Return a malloc'd path for the executable.  When argv[0] has no directory
 // part (jq was found via $PATH), search $PATH for it, as the shell did.
 static char *find_exe_path(const char *argv0) {
@@ -336,6 +318,24 @@ static char *find_exe_path(const char *argv0) {
   return strdup(argv0);
 }
 
+#ifdef WIN32
+int umain(int argc, char* argv[]);
+
+int wmain(int argc, wchar_t* wargv[]) {
+  size_t arg_sz;
+  char **argv = alloca(argc * sizeof(wchar_t*));
+  for (int i = 0; i < argc; i++) {
+    argv[i] = alloca((arg_sz = WideCharToMultiByte(CP_UTF8,
+                                                   0,
+                                                   wargv[i],
+                                                   -1, 0, 0, 0, 0)));
+    WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], arg_sz, 0, 0);
+  }
+  return umain(argc, argv);
+}
+
+int umain(int argc, char* argv[]) {
+#else /*}*/
 int main(int argc, char* argv[]) {
 #endif
   jq_state *jq = NULL;
