@@ -1993,6 +1993,15 @@ try strflocaltime("%c" * 10) catch .
 "2015-03-05T23:51:47Z"
 [[2015,2,5,23,51,47,4,63],1425599507]
 
+# %z offsets are applied, giving UTC broken down times
+[("2020-10-15T17:30:00-0400", "2020-10-15T17:30:00+0000", "2020-12-31T23:30:00-0200", "2021-01-01T00:30:00+0100") | strptime("%Y-%m-%dT%H:%M:%S%z")]
+null
+[[2020,9,15,21,30,0,4,288],[2020,9,15,17,30,0,4,288],[2021,0,1,1,30,0,5,0],[2020,11,31,23,30,0,4,365]]
+
+[("2020-10-15T17:30:00-0400", "2020-10-15T23:30:00+0200") | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime]
+null
+[1602797400,1602797400]
+
 # a format without a day of the month gives the first of the month
 [("2024-06" | strptime("%Y-%m")), ("2024" | strptime("%Y")) | ., todate]
 null

@@ -2324,6 +2324,8 @@ sections:
           The `strptime(fmt)` builtin parses input strings matching the
           `fmt` argument.  The output is in the "broken down time"
           representation consumed by `mktime` and output by `gmtime`.
+          If the format contains `%z`, the parsed UTC offset is applied,
+          so the result is always expressed in UTC.
 
           The `strftime(fmt)` builtin formats a time (GMT) with the
           given format.  The `strflocaltime` does the same, but using
@@ -2356,6 +2358,10 @@ sections:
           - program: 'strptime("%Y-%m-%dT%H:%M:%SZ")'
             input: '"2015-03-05T23:51:47Z"'
             output: ['[2015,2,5,23,51,47,4,63]']
+
+          - program: 'strptime("%Y-%m-%dT%H:%M:%S%z")'
+            input: '"2015-03-05T23:51:47-0400"'
+            output: ['[2015,2,6,3,51,47,5,64]']
 
           - program: 'strptime("%Y-%m-%dT%H:%M:%SZ")|mktime'
             input: '"2015-03-05T23:51:47Z"'
