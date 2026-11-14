@@ -1105,4 +1105,30 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+# $ORIGIN must resolve to the executable's directory when jq is found via $PATH
+if ! $msys && ! $mingw; then
+  mkdir -p "$d/orig/bin" "$d/orig/lib/jq" "$d/orig/cwd"
+  # a libtool wrapper script cannot be copied; prefer the real binary
+  realjq=$JQ_NO_B
+  [ -x "${JQ_NO_B%/*}/.libs/jq" ] && realjq="${JQ_NO_B%/*}/.libs/jq"
+  cp "$realjq" "$d/orig/bin/jq"
+  # uninstalled shared-library builds need the build tree's libraries
+  for l in "${JQ_NO_B%/*}/.libs" "${JQ_NO_B%/*}/vendor/oniguruma/src/.libs"; do
+    [ -d "$l" ] && LD_LIBRARY_PATH="$l${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" && export LD_LIBRARY_PATH
+  done
+  echo 'def f: "found";' > "$d/orig/lib/jq/origmod.jq"
+  origdir=$(cd "$d/orig/bin" && pwd -P)
+  (
+  cd "$d/orig/cwd"
+  export PATH="$origdir:$PATH"
+  HOME=/nonexistent jq -n 'include "origmod"; f' > "$d/orig/out"
+  echo '"found"' | cmp - "$d/orig/out" || { echo "Module not found via PATH origin" 1>&2; exit 1; }
+  [ "$(jq -nr 'get_jq_origin')" = "$origdir" ] || { echo "Bad origin for bare jq" 1>&2; exit 1; }
+  [ "$(jq -nc 'get_search_list')" = '["~/.jq","$ORIGIN/../lib/jq","$ORIGIN/../lib"]' ] || { echo "Bad default search list" 1>&2; exit 1; }
+  [ "$("$origdir/jq" -nr 'get_jq_origin')" = "$origdir" ] || { echo "Bad origin for explicit path" 1>&2; exit 1; }
+  jq -L "$d/orig/nolib" -n 'include "origmod"; f' 2>/dev/null && { echo "-L should replace default list" 1>&2; exit 1; }
+  exit 0
+  ) || exit 1
+fi
+
 exit 0

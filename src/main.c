@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -291,6 +292,50 @@ int wmain(int argc, wchar_t* wargv[]) {
 
 int umain(int argc, char* argv[]) {
 #else /*}*/
+// Return a malloc'd path for the executable.  When argv[0] has no directory
+// part (jq was found via $PATH), search $PATH for it, as the shell did.
+static char *find_exe_path(const char *argv0) {
+#ifndef WIN32
+  if (argv0 != NULL && argv0[0] != '\0' && strchr(argv0, '/') == NULL) {
+    const char *path = getenv("PATH");
+    if (path != NULL) {
+      size_t nlen = strlen(argv0);
+      const char *p = path;
+      for (;;) {
+        const char *e = strchr(p, ':');
+        size_t dlen = e ? (size_t)(e - p) : strlen(p);
+        char *cand = malloc(dlen + nlen + 3);
+        if (cand == NULL)
+          return NULL;
+        if (dlen == 0) {
+          memcpy(cand, "./", 2);
+          dlen = 2;
+        } else {
+          memcpy(cand, p, dlen);
+          cand[dlen++] = '/';
+        }
+        memcpy(cand + dlen, argv0, nlen + 1);
+        struct stat st;
+        if (access(cand, X_OK) == 0 && stat(cand, &st) == 0 && S_ISREG(st.st_mode)) {
+          if (cand[0] == '/')
+            return cand;
+          char *abs = realpath(cand, NULL);
+          free(cand);
+          if (abs != NULL)
+            return abs;
+          break;
+        }
+        free(cand);
+        if (!e)
+          break;
+        p = e + 1;
+      }
+    }
+  }
+#endif
+  return strdup(argv0);
+}
+
 int main(int argc, char* argv[]) {
 #endif
   jq_state *jq = NULL;
@@ -584,7 +629,7 @@ int main(int argc, char* argv[]) {
   }
   jq_set_attr(jq, jv_string("JQ_LIBRARY_PATH"), lib_search_paths);
 
-  char *origin = strdup(argv[0]);
+  char *origin = find_exe_path(argv[0]);
   if (origin == NULL) {
     fprintf(stderr, "jq: error: out of memory\n");
     exit(1);
