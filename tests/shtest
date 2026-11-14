@@ -1105,4 +1105,26 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+# Raw input: a final line without a trailing newline is not joined with the
+# first line of the next file
+printf 'a\nb' > "$d/raw1.txt"
+printf 'c' > "$d/raw2.txt"
+printf '' > "$d/raw_empty.txt"
+printf 'd\ne\n' > "$d/raw3.txt"
+$JQ -cR . "$d/raw1.txt" "$d/raw2.txt" "$d/raw_empty.txt" "$d/raw3.txt" > "$d/raw.out"
+printf '"a"\n"b"\n"c"\n"d"\n"e"\n' > "$d/raw.exp"
+cmp "$d/raw.out" "$d/raw.exp"
+$JQ -cRn '[inputs]' "$d/raw1.txt" "$d/raw2.txt" "$d/raw3.txt" > "$d/raw.out"
+printf '["a","b","c","d","e"]\n' > "$d/raw.exp"
+cmp "$d/raw.out" "$d/raw.exp"
+$JQ -cRn 'reduce inputs as $l ({}; .[input_filename|split("/")|last] += [$l])' "$d/raw1.txt" "$d/raw2.txt" "$d/raw3.txt" > "$d/raw.out"
+printf '{"raw1.txt":["a","b"],"raw2.txt":["c"],"raw3.txt":["d","e"]}\n' > "$d/raw.exp"
+cmp "$d/raw.out" "$d/raw.exp"
+$JQ -cR '[., input_line_number]' "$d/raw1.txt" "$d/raw2.txt" > "$d/raw.out"
+printf '["a",1]\n["b",2]\n["c",1]\n' > "$d/raw.exp"
+cmp "$d/raw.out" "$d/raw.exp"
+$JQ -cRs . "$d/raw1.txt" "$d/raw2.txt" > "$d/raw.out"
+printf '"a\\nbc"\n' > "$d/raw.exp"
+cmp "$d/raw.out" "$d/raw.exp"
+
 exit 0
