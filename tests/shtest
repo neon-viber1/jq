@@ -1105,4 +1105,20 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+## Freeing deeply nested values must not overflow the C stack
+(
+  ulimit -s 8192 2>/dev/null
+  for build in '{($n|tostring): $in}' '[$in]' '[{a: $in}]'; do
+    prog="def explore(n): def e: .[0] as \$n | .[1] as \$in | if \$n <= 0 then \$in else [\$n - 1, $build] | e end; [n,.] | e;
+      def depth: if type == \"object\" then if . == {} then 0 else 1 + (first(.[]) | depth) end else 0 end;
+      explore(200000) | [.] | length"
+    r=$($JQ -n "$prog") || { printf 'deep nesting failed for %s\n' "$build" 1>&2; exit 1; }
+    [ "$r" = 1 ] || { printf 'unexpected output for %s: %s\n' "$build" "$r" 1>&2; exit 1; }
+  done
+  prog='def e: .[0] as $n | .[1] as $in | if $n <= 0 then $in else [$n - 1, {($n|tostring): $in}] | e end;
+    def depth: if type == "object" then if . == {} then 0 else 1 + (first(.[]) | depth) end else 0 end;
+    [200000, null] | e | depth'
+  [ "$($JQ -n "$prog")" = 200000 ] || { printf 'deep nesting depth mismatch\n' 1>&2; exit 1; }
+) || exit 1
+
 exit 0
