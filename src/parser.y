@@ -245,6 +245,8 @@ static block gen_binop(block a, block b, int op) {
   return gen_call(funcname, BLOCK(gen_lambda(a), gen_lambda(b)));
 }
 
+#define CHECK_LHS(loc, b) do { if (block_is_var_rooted_path(b)) FAIL(loc, ASSIGN_VAR_MSG); } while (0)
+#define ASSIGN_VAR_MSG "Invalid path expression: a variable cannot be the start of an assignment path (use `$x | (.a = ...)`)"
 static block gen_format(block a, jv fmt) {
   return BLOCK(a, gen_call("format", gen_lambda(gen_const(fmt))));
 }
@@ -349,6 +351,7 @@ Expr "//" Expr {
   $$ = gen_definedor($1, $3);
 } |
 Expr '=' Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_call("_assign", BLOCK(gen_lambda($1), gen_lambda($3)));
 } |
 Expr "or" Expr {
@@ -358,27 +361,32 @@ Expr "and" Expr {
   $$ = gen_and($1, $3);
 } |
 Expr "//=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_definedor_assign($1, $3);
 } |
 Expr "|=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_call("_modify", BLOCK(gen_lambda($1), gen_lambda($3)));
 } |
 Expr '+' Expr {
   $$ = gen_binop($1, $3, '+');
 } |
 Expr "+=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_update($1, $3, '+');
 } |
 Expr '-' Expr {
   $$ = gen_binop($1, $3, '-');
 } |
 Expr "-=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_update($1, $3, '-');
 } |
 Expr '*' Expr {
   $$ = gen_binop($1, $3, '*');
 } |
 Expr "*=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_update($1, $3, '*');
 } |
 Expr '/' Expr {
@@ -388,9 +396,11 @@ Expr '%' Expr {
   $$ = gen_binop($1, $3, '%');
 } |
 Expr "/=" Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_update($1, $3, '/');
 } |
 Expr SETMOD Expr {
+  CHECK_LHS(@1, $1);
   $$ = gen_update($1, $3, '%');
 } |
 Expr "==" Expr {

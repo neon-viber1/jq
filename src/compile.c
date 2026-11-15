@@ -103,6 +103,29 @@ int block_is_single(block b) {
   return b.first && b.first == b.last;
 }
 
+// True if b is a variable followed only by path accessors, e.g. $x.a[0][]
+int block_is_var_rooted_path(block b) {
+  int depth = 0, seen_var = 0, seen_access = 0;
+  for (inst* i = b.first; i; i = i->next) {
+    if (i->op == SUBEXP_BEGIN) { depth++; continue; }
+    if (i->op == SUBEXP_END) { depth--; continue; }
+    if (depth > 0) continue;
+    // constant or implicit keys of the accessors (see gen_subexp)
+    if (i->op == PUSHK_UNDER || i->op == DUP ||
+        (!seen_var && i->op == INSERT)) continue;
+    if (!seen_var) {
+      if (i->op != LOADV && i->op != LOADVN) return 0;
+      seen_var = 1;
+    } else if (i->op == INDEX || i->op == INDEX_OPT ||
+               i->op == EACH || i->op == EACH_OPT) {
+      seen_access = 1;
+    } else {
+      return 0;
+    }
+  }
+  return seen_var && seen_access;
+}
+
 static inst* block_take(block* b) {
   if (b->first == 0) return 0;
   inst* i = b->first;
