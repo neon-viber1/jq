@@ -3803,6 +3803,10 @@ sections:
 
       For paths starting with `$ORIGIN/`, the directory where the jq
       executable is located is substituted for `$ORIGIN`.
+      This also holds when jq is run by bare name and found via the
+      `PATH` environment variable.  Absolute and `~/` paths can be given
+      with the `search` metadata key, e.g.
+      `include "lib" {search: "/abs/dir"};`.
 
       For paths starting with `./` or paths that are `.`, the path of
       the including file is substituted for `.`.  For top-level programs
