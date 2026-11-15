@@ -1,3 +1,10 @@
+# Unreleased
+
+## Bug fixes
+
+- Fix assignment (`=`, `|=`) to multiple array slices when the replacement length differs from the slice length.
+  @user #NNNN
+
 # 1.8.2
 
 This is a patch release with security fixes and bug fixes since 1.8.1, along with new builds for Windows arm64 and Docker arm/v7.
