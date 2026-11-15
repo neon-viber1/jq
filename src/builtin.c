@@ -1715,6 +1715,27 @@ static jv f_strptime(jq_state *jq, jv a, jv b) {
   if (tm.tm_yday == 367 && tm.tm_mday != 0 && tm.tm_mon >= 0 && tm.tm_mon <= 11)
     set_tm_yday(&tm);
 #endif
+#if defined(HAVE_TIMEGM) && defined(HAVE_GMTIME_R) && (defined(HAVE_TM_TM_GMT_OFF) || defined(HAVE_TM___TM_GMT_OFF))
+  /*
+   * When the format contained %z, the C library records the parsed UTC offset
+   * in tm_gmtoff. Apply it so the result is expressed in UTC.
+   */
+#ifdef HAVE_TM_TM_GMT_OFF
+  long gmtoff = tm.tm_gmtoff;
+#else
+  long gmtoff = tm.__tm_gmtoff;
+#endif
+  if (gmtoff != 0) {
+    struct tm utm = tm;
+    time_t t = timegm(&utm);
+    if (utm.tm_wday != -1 && !(t == (time_t)-1 && utm.tm_year != 69)) {
+      t -= gmtoff;
+      struct tm out;
+      if (gmtime_r(&t, &out) != NULL)
+        tm = out;
+    }
+  }
+#endif
   jv r = tm2jv(&tm, 0);
   if (*end != '\0')
     r = jv_array_append(r, jv_string(end));
