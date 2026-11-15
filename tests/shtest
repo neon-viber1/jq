@@ -1105,4 +1105,16 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+## Test that NaN and Infinity are rejected as JSON input, while lowercase nan is kept
+for v in 'NaN' '{"x": NaN}' 'Infinity' '-Infinity' 'inf' '-inf' '[1,NaN]'; do
+  if printf '%s\n' "$v" | $JQ . >/dev/null 2>&1; then
+    printf 'Error expected for JSON input %s\n' "$v" 1>&2
+    exit 1
+  fi
+done
+if [ "$(echo nan | $JQ -c .)" != null ]; then
+  printf 'lowercase nan should still parse\n' 1>&2
+  exit 1
+fi
+
 exit 0

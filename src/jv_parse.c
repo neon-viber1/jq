@@ -532,6 +532,15 @@ static pfunc check_literal(struct jv_parser* p) {
   } else {
     // FIXME: better parser
     p->tokenbuf[p->tokenpos] = 0;
+    // Reject non-JSON number spellings such as NaN, Infinity and inf.
+    // The lowercase "nan" literal is kept as a jq extension.
+    {
+      const char* t = p->tokenbuf;
+      if (*t == '-') t++;
+      if (((*t >= 'a' && *t <= 'z') || (*t >= 'A' && *t <= 'Z')) &&
+          strcmp(t, "nan") != 0)
+        return "Invalid numeric literal";
+    }
 #ifdef USE_DECNUM
     jv number = jv_number_with_literal(p->tokenbuf);
     if (jv_get_kind(number) == JV_KIND_INVALID) {

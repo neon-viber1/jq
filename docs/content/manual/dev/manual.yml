@@ -1526,6 +1526,10 @@ sections:
           The `isnormal` builtin returns true if its input is a normal
           number.
 
+          The JSON parser rejects `NaN` and `Infinity` as invalid
+          numeric literals, but accepts lowercase `nan` as a jq
+          extension.  `tonumber` still accepts these spellings.
+
           Note that division by zero raises an error.
 
           Currently most arithmetic operations operating on infinities,
