@@ -2894,3 +2894,21 @@ null
 try ((reduce range(10001) as $_ ({}; {a: .})) as $x | [$x, $x] | unique) catch .
 null
 "Comparison too deep"
+
+# Numbers with leading zeros are invalid JSON
+.[] | try fromjson catch .
+["00","01","-01","[0,01]","{\"a\":000}"]
+"Invalid numeric literal at EOF at line 1, column 2 (while parsing '00')"
+"Invalid numeric literal at EOF at line 1, column 2 (while parsing '01')"
+"Invalid numeric literal at EOF at line 1, column 3 (while parsing '-01')"
+"Invalid numeric literal at line 1, column 6 (while parsing '[0,01]')"
+"Invalid numeric literal at line 1, column 9 (while parsing '{\"a\":000}')"
+
+map(fromjson)
+["0","-0","0.5","0e1","10","-0.01","1E+2"]
+[0,-0,0.5,0,10,-0.01,100]
+
+# jq program literals with leading zeros are unchanged
+[01, 007, 1.50]
+null
+[1,7,1.50]
