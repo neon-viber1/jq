@@ -288,6 +288,20 @@ else
   cmp $d/out $d/expected
 fi
 
+# Tests for --output0
+printf '4\0"foo"\0"[]"\0[]\0{"hi":"world"}\0' > $d/expected
+printf '[4,"foo", "[]",[],{"hi": "world"}]' | $VALGRIND $Q $JQ -c --output0 '.[]' > $d/out
+cmp $d/out $d/expected
+printf '"\\u0000"\0' > $d/expected
+$VALGRIND $Q $JQ -n --output0 '"\u0000"' > $d/out
+cmp $d/out $d/expected
+printf 'a\0' > $d/expected
+$VALGRIND $Q $JQ -n -r --output0 '"a"' > $d/out
+cmp $d/out $d/expected
+: > $d/expected
+$VALGRIND $Q $JQ -n --output0 'empty' > $d/out
+cmp $d/out $d/expected
+
 # Regression tests for #3194
 echo 42 > $d/expected
 $JQ -nn 42 > $d/out 2>&1

@@ -77,6 +77,8 @@ static void usage(int code, int keep_it_short) {
       "  -c, --compact-output      compact instead of pretty-printed output;\n"
       "  -r, --raw-output          output strings without escapes and quotes;\n"
       "      --raw-output0         implies -r and output NUL after each output;\n"
+      "      --output0             output NUL after each output instead of\n"
+      "                            newline, without raw conversion;\n"
       "  -j, --join-output         implies -r and output without newline after\n"
       "                            each output;\n"
       "  -a, --ascii-output        output strings by only ASCII characters\n"
@@ -156,6 +158,7 @@ enum {
   RAW_NO_LF             = 1024,
   UNBUFFERED_OUTPUT     = 2048,
   EXIT_STATUS           = 4096,
+  OUTPUT0               = 8192,
   SEQ                   = 16384,
   /* debugging only */
   DUMP_DISASM           = 32768,
@@ -180,7 +183,7 @@ static int process(jq_state *jq, jv value, int flags, int dumpopts, int options)
     if ((options & RAW_OUTPUT) && jv_get_kind(result) == JV_KIND_STRING) {
       if (options & ASCII_OUTPUT) {
         jv_dumpf(jv_copy(result), stdout, JV_PRINT_ASCII);
-      } else if ((options & RAW_OUTPUT0) && strlen(jv_string_value(result)) != (unsigned long)jv_string_length_bytes(jv_copy(result))) {
+      } else if ((options & (RAW_OUTPUT0 | OUTPUT0)) && strlen(jv_string_value(result)) != (unsigned long)jv_string_length_bytes(jv_copy(result))) {
         jv_free(result);
         result = jv_invalid_with_msg(jv_string(
               "Cannot dump a string containing NUL with --raw-output0 option"));
@@ -202,7 +205,7 @@ static int process(jq_state *jq, jv value, int flags, int dumpopts, int options)
     }
     if (!(options & RAW_NO_LF))
       priv_fwrite("\n", 1, stdout, dumpopts & JV_PRINT_ISATTY);
-    if (options & RAW_OUTPUT0)
+    if (options & (RAW_OUTPUT0 | OUTPUT0))
       priv_fwrite("\0", 1, stdout, dumpopts & JV_PRINT_ISATTY);
     if (options & UNBUFFERED_OUTPUT)
       fflush(stdout);
@@ -389,6 +392,8 @@ int main(int argc, char* argv[]) {
           options |= RAW_OUTPUT;
         } else if (isoption(&text, 0, "raw-output0", is_short)) {
           options |= RAW_OUTPUT | RAW_NO_LF | RAW_OUTPUT0;
+        } else if (isoption(&text, 0, "output0", is_short)) {
+          options |= RAW_NO_LF | OUTPUT0;
         } else if (isoption(&text, 'j', "join-output", is_short)) {
           options |= RAW_OUTPUT | RAW_NO_LF;
         } else if (isoption(&text, 'c', "compact-output", is_short)) {
