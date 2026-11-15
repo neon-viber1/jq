@@ -763,6 +763,14 @@ strptime("%Y-%m-%dT%H:%M:%SZ")|mktime
 "2015-03-05T23:51:47Z"
 1425599507
 
+INDEX(.id) | length
+[{"id":1,"x":1},{"id":"1","x":2}]
+1
+
+INDEX(.id|tojson) | length
+[{"id":1,"x":1},{"id":"1","x":2}]
+2
+
 . == false
 null
 false

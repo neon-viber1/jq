@@ -2372,6 +2372,14 @@ sections:
             the given index expression applied to each value from the
             given stream.
 
+            **Warning**: the result is a JSON object, so its keys must be
+            strings.  String keys are used as they are, and all other
+            values are converted with `tojson`.  Distinct keys can
+            therefore collide, for example the number `1` and the
+            string `"1"`; a later value then silently overwrites an
+            earlier one.  Make sure keys are all of one type, or
+            normalize them first, e.g. `INDEX(.id|tojson)`.
+
           * `JOIN($idx; stream; idx_expr; join_expr)`:
 
             This builtin joins the values from the given stream to the
@@ -2400,6 +2408,15 @@ sections:
 
             This builtin outputs `true` if any value in the source stream
             appears in the second stream, otherwise it outputs `false`.
+
+        examples:
+          - program: 'INDEX(.id) | length'
+            input: '[{"id":1,"x":1},{"id":"1","x":2}]'
+            output: ['1']
+
+          - program: 'INDEX(.id|tojson) | length'
+            input: '[{"id":1,"x":1},{"id":"1","x":2}]'
+            output: ['2']
 
       - title: "`builtins`"
         body: |
