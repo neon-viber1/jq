@@ -148,6 +148,15 @@ sections:
         This can be useful when the values being output can contain newlines.
         When the output value contains NUL, jq exits with non-zero code.
 
+      * `--output0`:
+
+        Like `--raw-output0` but without raw conversion: values are
+        printed as JSON (strings keep their quotes and escapes, including
+        `\u0000`) and jq prints NUL instead of newline after each output.
+        This makes the output unambiguous, e.g. `"[]"` and `[]` stay
+        distinguishable. When combined with `-r`, strings are output raw
+        and, as with `--raw-output0`, a string containing NUL is an error.
+
       * `--join-output` / `-j`:
 
         Like `-r` but jq won't print a newline after each output.
