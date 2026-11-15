@@ -1269,7 +1269,11 @@ jv jq_get_prog_origin(jq_state *jq) {
 
 jv jq_get_lib_dirs(jq_state *jq) {
   jv lib_dirs = jq_get_attr(jq, jv_string("JQ_LIBRARY_PATH"));
-  return jv_is_valid(lib_dirs) ? lib_dirs : jv_array();
+  if (jv_get_kind(lib_dirs) == JV_KIND_ARRAY)
+    return lib_dirs;
+  // Unset (or not an array, e.g. null): behave as an empty search list.
+  jv_free(lib_dirs);
+  return jv_array();
 }
 
 void jq_set_attrs(jq_state *jq, jv attrs) {
