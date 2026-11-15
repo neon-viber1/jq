@@ -145,6 +145,9 @@ TESTS = tests/mantest tests/jqtest tests/shtest tests/utf8test tests/base64test 
 if !WIN32
 TESTS += tests/optionaltest
 endif
+if HAVE_FENV_TESTS
+TESTS += tests/fenvtest
+endif
 
 AM_TESTS_ENVIRONMENT = JQ=$(abs_builddir)/jq
 if ENABLE_VALGRIND
@@ -249,7 +252,8 @@ EXTRA_DIST = $(DOC_FILES) $(man_MANS) $(TESTS) $(TEST_LOG_COMPILER)     \
         tests/modules/cycle_self.jq                                     \
         tests/onig.supp tests/local.supp                                \
         tests/setup tests/torture/input0.json                           \
-        tests/optional.test tests/man.test tests/manonig.test           \
+        tests/optional.test tests/fenv.test tests/fenvtest                \
+        tests/man.test tests/manonig.test                               \
         tests/jq.test tests/onig.test tests/base64.test tests/uri.test  \
         tests/jq-f-test.sh                                              \
         tests/no-main-program.jq tests/yes-main-program.jq

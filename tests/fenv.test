@@ -1,0 +1,19 @@
+# See tests/jq.test and the jq manual for more information.
+# Only run when configure found <fenv.h>.
+
+# Invalid floating point operations in math functions are errors
+try (-1 | sqrt) catch .
+null
+"sqrt: invalid floating point operation"
+
+try (2 | acos) catch .
+null
+"acos: invalid floating point operation"
+
+try (-1 | log) catch .
+null
+"log: invalid floating point operation"
+
+try pow(-8; 1/3) catch .
+null
+"pow: invalid floating point operation"
