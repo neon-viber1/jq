@@ -413,8 +413,15 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
     if (state->parser == NULL) {
       // Raw input
       is_last = jq_util_input_read_more(state);
-      if (state->buf_valid_len == 0)
+      if (state->buf_valid_len == 0) {
+        // A file ending exactly at a chunk boundary: terminate the pending line
+        if (jv_is_valid(value) && !jv_is_valid(state->slurped) &&
+            state->current_input && feof(state->current_input)) {
+          state->current_line++;
+          return value;
+        }
         continue;
+      }
       if (jv_is_valid(state->slurped)) {
         // Slurped raw input
         state->slurped = jv_string_concat(state->slurped, jv_string_sized(state->buf, state->buf_valid_len));
@@ -429,6 +436,12 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
         value = jv_string_concat(value, jv_string_sized(state->buf, state->buf_valid_len));
         state->buf[0] = '\0';
         state->buf_valid_len = 0;
+        if (state->current_input && feof(state->current_input)) {
+          // Final line of a file without a trailing newline: don't join it
+          // with the first line of the next file.
+          state->current_line++;
+          return value;
+        }
       }
     } else {
       if (jv_parser_remaining(state->parser) == 0) {

@@ -119,9 +119,10 @@ sections:
       * `--raw-input` / `-R`:
 
         Don't parse the input as JSON. Instead, each line of text is
-        passed to the filter as a string. If combined with `--slurp`,
-        then the entire input is passed to the filter as a single long
-        string.
+        passed to the filter as a string. The last line of each file is
+        passed as its own string even if it has no trailing newline. If
+        combined with `--slurp`, then the entire input is passed to the
+        filter as a single long string.
 
       * `--slurp` / `-s`:
 
