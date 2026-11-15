@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#ifndef WIN32
+#include <signal.h>
+#endif
 
 #ifdef WIN32
 #include <windows.h>
@@ -46,6 +49,17 @@ int jq_testsuite(jv lib_dirs, int verbose, int argc, char* argv[]);
  * For a longer help message we could use a better option parsing
  * strategy, one that lets stack options.
  */
+#ifndef WIN32
+// Async-signal-safe: reset terminal colors, then die from the signal.
+static void restore_color_and_die(int sig) {
+  static const char reset[] = "\033[0m";
+  ssize_t r = write(STDOUT_FILENO, reset, sizeof(reset) - 1);
+  (void)r;
+  signal(sig, SIG_DFL);
+  raise(sig);
+}
+#endif
+
 static void usage(int code, int keep_it_short) {
   FILE *f = stderr;
 
@@ -572,6 +586,18 @@ int main(int argc, char* argv[]) {
   if (options & ASCII_OUTPUT) dumpopts |= JV_PRINT_ASCII;
   if (options & COLOR_OUTPUT) dumpopts |= JV_PRINT_COLOR;
   if (options & NO_COLOR_OUTPUT) dumpopts &= ~JV_PRINT_COLOR;
+
+#ifndef WIN32
+  if (dumpopts & JV_PRINT_COLOR) {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = restore_color_and_die;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+  }
+#endif
 
   if (!jq_set_colors(getenv("JQ_COLORS")))
       fprintf(stderr, "Failed to set $JQ_COLORS\n");
