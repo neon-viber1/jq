@@ -1105,4 +1105,17 @@ if $JQ -nf "$d/nul_modulemeta.jq" >/dev/null 2>/dev/null; then
   exit 1
 fi
 
+# Runaway recursion exits with an error, not an abort
+rc=0
+$JQ -n 'def a(x): a(x); a(0)' >/dev/null 2>$d/recurse_err || rc=$?
+if [ $rc -eq 0 ] || [ $rc -ge 128 ]; then
+  printf 'Bad exit status %s for runaway recursion\n' $rc 1>&2
+  exit 1
+fi
+if grep 'cannot allocate memory' $d/recurse_err >/dev/null; then
+  printf 'Unexpected allocation failure message for runaway recursion\n' 1>&2
+  exit 1
+fi
+grep 'stack overflow' $d/recurse_err >/dev/null
+
 exit 0

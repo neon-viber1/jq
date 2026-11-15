@@ -88,8 +88,10 @@ static void stack_reallocate(struct stack* s, size_t sz) {
 
   size_t new_mem_length = align_round_up((old_mem_length + sz + 256) * 2);
   if (new_mem_length > INT_MAX) {
-    fprintf(stderr, "jq: error: cannot allocate memory\n");
-    abort();
+    // Runaway recursion (or similar) exhausted the addressable stack range;
+    // exit cleanly rather than aborting.
+    fprintf(stderr, "jq: error: stack overflow: recursion too deep\n");
+    exit(5);
   }
   char* new_mem_start = jv_mem_realloc(old_mem_start, new_mem_length);
   memmove(new_mem_start + (new_mem_length - old_mem_length),
